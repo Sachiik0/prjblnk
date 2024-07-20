@@ -34,8 +34,8 @@ export async function POST(request: Request){
         const serialTX = tx.serialize({requireAllSignatures: false, verifySignatures: false}).toString("base64");
 
         const response: ActionPostResponse = {
-            transaction:"",
-            message:"",
+            transaction: serialTX,
+            message:"hello "+userPubkey,
         }
 
         
