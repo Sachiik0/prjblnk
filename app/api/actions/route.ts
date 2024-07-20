@@ -29,8 +29,10 @@ export async function POST(request: Request){
         console.log(userPubkey)
 
         const tx = new Transaction();
+        const bh =(await connection.getLatestBlockhash({commitment: "finalized"})).blockhash;
+        console.log("using blockhash "+bh)
         tx.feePayer = new PublicKey(userPubkey);
-        tx.recentBlockhash = (await connection.getLatestBlockhash({commitment: "finalized"})).blockhash;
+        tx.recentBlockhash = bh;
         const serialTX = tx.serialize({requireAllSignatures: false, verifySignatures: false}).toString("base64");
 
         const response: ActionPostResponse = {
