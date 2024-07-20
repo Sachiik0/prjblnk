@@ -56,6 +56,6 @@ export async function POST(request: Request){
 };
 
 
-// export async function OPTION(request: Request){
-//     return Response.json(null, {headers: ACTIONS_CORS_HEADERS,});
-// }
+export async function OPTION(request: Request){
+    return Response.json(null, {headers: ACTIONS_CORS_HEADERS,});
+}
