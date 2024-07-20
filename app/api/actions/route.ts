@@ -1,79 +1,67 @@
-import {
-    ACTIONS_CORS_HEADERS,
-    ActionGetResponse,
-    ActionPostRequest,
-    ActionPostResponse,
-    MEMO_PROGRAM_ID,
-    createPostResponse,
-} from "@solana/actions";
-import {
-    ComputeBudgetProgram,
-    Connection,
-    PublicKey,
-    Transaction,
-    TransactionInstruction,
-    clusterApiUrl,
-} from "@solana/web3.js";
-
-export const GET = (req: Request) => {
-    const payload: ActionGetResponse = {
-        icon: new URL("/therock.webp", new URL(req.url).origin).toString(),
-        label: "Buy The Rock Fanny Pack",
-        title: "Rock Fanny Pack",
-        description: "This is a super simple Action",
-
-    };
-    return Response.json(payload, {
-        headers: ACTIONS_CORS_HEADERS,
-    });
-};
-
-export const OPTIONS = GET;
-
-export const POST = async (req: Request) => {
-    try {
-        const body: ActionPostRequest = await req.json();
-  
-        let account: PublicKey;
-        try {
-            account = new PublicKey(body.account);
-        } catch (err) {
-            return new Response("Invalid 'account' provided", {
-                status: 400,
-                headers: ACTIONS_CORS_HEADERS,
-            });
+import {ActionGetResponse, ActionPostRequest, ActionPostResponse, ACTIONS_CORS_HEADERS} from '@solana/actions'
+import { PublicKey, SystemProgram, Transaction, Connection, clusterApiUrl } from '@solana/web3.js';
+export async function GET(request: Request){
+    try{
+        const payload: ActionGetResponse = {
+            icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTLT7i1KaPG3JWvgdPnWK9h3h3IxUxumVQsEA&s",
+            description: "''Palimos'' is a Filipino term that refers to begging or the act of asking for alms or charity, typically on the streets or in public places. It often involves individuals or groups asking passersby for money or food to meet their immediate needs. Palimos is a common sight in many urban areas in the Philippines, where poverty and economic hardships may drive people to seek assistance from others.",
+            title: "Online Limos for Solana Breakpoint 2024",
+            label:'Donate'
         }
-  
-        const transaction = new Transaction();
-  
-        transaction.add(
-            // note: createPostResponse 
-            ComputeBudgetProgram.setComputeUnitPrice({
-                microLamports: 1000,
-            }),
-            new TransactionInstruction({
-                programId: new PublicKey(MEMO_PROGRAM_ID),
-                data: Buffer.from("this is a simple memo message", "utf8"),
-                keys: [],
-            })
-        );
-  
-        transaction.feePayer = account;
-    
-        const connection = new Connection(
-            process.env.RPC_URL_MAINNET ?? clusterApiUrl("devnet")
-        );
-        transaction.recentBlockhash = (
-            await connection.getLatestBlockhash()
-        ).blockhash;
-        const payload: ActionPostResponse = await createPostResponse({
-            fields: {
-                transaction,
-            },
+        return Response.json(payload, {headers: ACTIONS_CORS_HEADERS,});
+    }catch(err) {
+        console.log(err);
+        let message = "An unknown error occurred";
+        if (typeof err == "string") message = err;
+        return new Response(message, {
+            status: 400,
+            headers: ACTIONS_CORS_HEADERS,
         });
-
-            return Response.json(payload, { headers: ACTIONS_CORS_HEADERS });
-    } catch (err) {
-        return Response.json("An unknown error occurred", { status: 400 });
     }
 };
+
+export async function POST(request: Request){
+    try{
+
+        const connection = new Connection(clusterApiUrl('devnet'));
+        const requestBody: ActionPostRequest = await request.json()
+        const userPubkey = requestBody.account;
+        console.log(userPubkey)
+
+        const tx = new Transaction(); 
+        const ix = SystemProgram.transfer({
+            fromPubkey: new PublicKey(userPubkey),
+            toPubkey: new PublicKey("41ywsxNiW27shHcaHJ5fLc2KbMaoqMoSWkDNnzS9Fgzm"),
+            lamports:1000000
+        })
+
+        const bh =(await connection.getLatestBlockhash({commitment: "finalized"})).blockhash;
+        console.log("using blockhash "+bh)
+        tx.feePayer = new PublicKey(userPubkey);
+        tx.recentBlockhash = bh;
+        const serialTX = tx.serialize({requireAllSignatures: false, verifySignatures: false}).toString("base64");
+
+        const response: ActionPostResponse = {
+            transaction: serialTX,
+            message:"hello "+userPubkey,
+        }
+
+        
+
+
+        return Response.json(response, {headers: ACTIONS_CORS_HEADERS,});
+    }catch (err) {
+        console.log(err);
+        let message = "An unknown error occurred";
+        if (typeof err == "string") message = err;
+        return new Response(message, {
+            status: 400,
+            headers: ACTIONS_CORS_HEADERS,
+        });
+    }
+};
+
+
+// export async function OPTION(request: Request){
+//     return Response.json(null, {headers: ACTIONS_CORS_HEADERS,});
+// }
