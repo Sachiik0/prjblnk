@@ -1,4 +1,5 @@
 import {ActionGetResponse, ActionPostRequest, ActionPostResponse, ACTIONS_CORS_HEADERS} from '@solana/actions'
+import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 export async function GET(request: Request){
     try{
         const payload: ActionGetResponse = {
@@ -25,10 +26,18 @@ export async function POST(request: Request){
         const userPubkey = requestBody.account;
         console.log(userPubkey)
 
+        const tx = new Transaction();
+        tx.feePayer = new PublicKey(userPubkey);
+        tx.recentBlockhash = SystemProgram.programId.toBase58();
+        const serialTX = tx.serialize({requireAllSignatures: false, verifySignatures: false}).toString("base64");
+
         const response: ActionPostResponse = {
             transaction:"",
             message:"",
         }
+
+        
+
 
         return Response.json(response, {headers: ACTIONS_CORS_HEADERS,});
     }catch (err) {
@@ -41,3 +50,8 @@ export async function POST(request: Request){
         });
     }
 };
+
+
+export async function OPTION(request: Request){
+    return Response.json(null, {headers: ACTIONS_CORS_HEADERS,});
+}
