@@ -23,7 +23,7 @@ export async function GET(request: Request){
 export async function POST(request: Request){
     try{
 
-        const connection = new Connection(clusterApiUrl("devnet"));
+        const connection = new Connection(clusterApiUrl('mainnet-beta'));
         const requestBody: ActionPostRequest = await request.json()
         const userPubkey = requestBody.account;
         console.log(userPubkey)
