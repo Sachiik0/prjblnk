@@ -28,27 +28,24 @@ export async function POST(request: Request){
         const userPubkey = requestBody.account;
         console.log(userPubkey)
 
-        const tx = new Transaction();
+        const tx = new Transaction(); 
         const ix = SystemProgram.transfer({
             fromPubkey: new PublicKey(userPubkey),
             toPubkey: new PublicKey("41ywsxNiW27shHcaHJ5fLc2KbMaoqMoSWkDNnzS9Fgzm"),
-            lamports: 1000000,
-        });
-    
+            lamports:1000000
+        })
         tx.add(ix);
-    
-        const { blockhash } = await connection.getLatestBlockhash({ commitment: "finalized" });
-        console.log("using blockhash " + blockhash);
-        
+
+        const bh =(await connection.getLatestBlockhash({commitment: "finalized"})).blockhash;
+        console.log("using blockhash "+bh)
         tx.feePayer = new PublicKey(userPubkey);
-        tx.recentBlockhash = blockhash;
-    
-        const serializedTX = tx.serialize({ requireAllSignatures: false, verifySignatures: false }).toString("base64");
-    
+        tx.recentBlockhash = bh;
+        const serialTX = tx.serialize({requireAllSignatures: false, verifySignatures: false}).toString("base64");
+
         const response: ActionPostResponse = {
-            transaction: serializedTX,
-            message: "hello " + userPubkey.toString(),
-        };
+            transaction: serialTX,
+            message:"hello "+userPubkey,
+        }
 
         
 
